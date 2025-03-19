@@ -29,7 +29,7 @@
     }
     textarea {
       width: 100%;
-      height: 20vh;
+      height: 150px;
       padding: 12px;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -44,23 +44,58 @@
       padding: 10px 15px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       transition: background-color 0.3s;
+      margin-right: 10px;
     }
+    
     button:hover {
       background-color: #2980b9;
     }
-    .output-container {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 20px;
+    
+    input[type="range"] {
+      width: 150px;
+      vertical-align: middle;
     }
     
-    .output-container h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
+    #line-height-value {
+      display: inline-block;
+      width: 30px;
+      text-align: center;
     }
+    
+    /* Pill button toggle styles */
+    .toggle-container {
+      display: flex;
+      margin-left: 10px;
+      background-color: #f0f0f0;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 30px;
+      border: 1px solid #ddd;
+    }
+    
+    .toggle-option {
+      padding: 5px 15px;
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+    
+    .toggle-option.active {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    /* Move toggle to section heading */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
     .output {
       background-color: #f9f9f9;
       border: 1px solid #ddd;
@@ -74,6 +109,76 @@
       line-height: 1.5;
       resize: vertical;
     }
+    
+    /* Control the spacing of rendered HTML in the third section */
+    #output-stripped {
+      white-space: normal;
+    }
+    
+    /* Preserve line breaks in plain text mode */
+    #output-stripped.plain-text {
+      white-space: pre-wrap;
+    }
+    
+    /* Override browser default margins more aggressively */
+    #output-stripped * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    #output-stripped p, #output-stripped div {
+      margin: 0.3em 0;
+    }
+    
+    #output-stripped h1, #output-stripped h2, #output-stripped h3, 
+    #output-stripped h4, #output-stripped h5, #output-stripped h6 {
+      margin: 0.5em 0 0.3em 0;
+    }
+    
+    #output-stripped ul, #output-stripped ol {
+      margin: 0.3em 0;
+      padding-left: 1.5em;
+    }
+    
+    #output-stripped li {
+      margin: 0.1em 0;
+    }
+    
+    /* Class for more compact spacing between elements */
+    #output-stripped .compact-spacing {
+      margin-top: 0.2em;
+      margin-bottom: 0.2em;
+    }
+    
+    /* Ensure consecutive elements don't create excessive spacing */
+    #output-stripped .compact-spacing + .compact-spacing {
+      margin-top: 0;
+    }
+    
+    /* Special handling for consecutive block elements */
+    #output-stripped p + p, 
+    #output-stripped div + div,
+    #output-stripped h1 + p,
+    #output-stripped h2 + p,
+    #output-stripped h3 + p,
+    #output-stripped h4 + p,
+    #output-stripped h5 + p,
+    #output-stripped h6 + p {
+      margin-top: 0.4em;
+    }
+    
+    .output-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+    
+    .output-container h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    
     .examples {
       margin-top: 30px;
       background-color: #f5f5f5;
@@ -82,14 +187,17 @@
       max-height: 300px;
       overflow-y: auto;
     }
+    
     .examples h3 {
       margin-top: 0;
     }
+    
     .example-item {
       cursor: pointer;
       margin-bottom: 10px;
       color: #3498db;
     }
+    
     .example-item:hover {
       text-decoration: underline;
     }
@@ -105,6 +213,11 @@
     <div>
       <button id="decode-btn">Decode</button>
       <button id="clear-btn">Clear</button>
+      <div style="margin-top: 10px; display: flex; align-items: center;">
+        <label for="line-height">Line Height: </label>
+        <input type="range" id="line-height" min="1.0" max="3.0" step="0.1" value="1.5">
+        <span id="line-height-value">1.5</span>
+      </div>
     </div>
     
     <div class="sections-container" style="display: flex; flex-direction: column; flex-grow: 1; gap: 20px;">
@@ -114,7 +227,13 @@
       </div>
       
       <div class="output-container">
-        <h3>Decoded Output (HTML Tags Removed, Line Breaks Preserved):</h3>
+        <h3 class="section-heading">
+          Decoded Output (HTML Tags with Rendering Toggle):
+          <div class="toggle-container">
+            <button id="html-toggle" class="toggle-option active">Render HTML</button>
+            <button id="text-toggle" class="toggle-option">Plain Text</button>
+          </div>
+        </h3>
         <div id="output-stripped" class="output"></div>
       </div>
     </div>
@@ -127,43 +246,57 @@
       <div class="example-item" id="example4">Line breaks: First line&lt;br&gt;Second line&lt;br /&gt;Third line</div>
       <div class="example-item" id="example5">Nested entities: &amp;amp;lt;div&amp;amp;gt;Double encoded&amp;amp;lt;/div&amp;amp;gt;</div>
       <div class="example-item" id="example6">Math symbols: 5 &lt; x &lt; 10 and y &gt; 20 should be preserved</div>
+      <div class="example-item" id="example7">&lt;h2 style=&quot;color: blue;&quot;&gt;Formatted Text&lt;/h2&gt;
+&lt;p&gt;This shows &lt;strong&gt;bold&lt;/strong&gt;, &lt;em&gt;italic&lt;/em&gt;, and &lt;u&gt;underlined&lt;/u&gt; text.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Item 1&lt;/li&gt;
+  &lt;li&gt;Item 2&lt;/li&gt;
+&lt;/ul&gt;</div>
     </div>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Get DOM elements
       const inputEl = document.getElementById('input');
       const outputEl = document.getElementById('output');
       const outputStrippedEl = document.getElementById('output-stripped');
       const decodeBtn = document.getElementById('decode-btn');
       const clearBtn = document.getElementById('clear-btn');
+      const lineHeightSlider = document.getElementById('line-height');
+      const lineHeightValue = document.getElementById('line-height-value');
+      const htmlToggle = document.getElementById('html-toggle');
+      const textToggle = document.getElementById('text-toggle');
       const example1 = document.getElementById('example1');
       const example2 = document.getElementById('example2');
       const example3 = document.getElementById('example3');
       const example4 = document.getElementById('example4');
       const example5 = document.getElementById('example5');
       const example6 = document.getElementById('example6');
+      const example7 = document.getElementById('example7');
       
       // Make output areas resizable
       makeResizable(outputEl);
       makeResizable(outputStrippedEl);
       
-      // Function to decode HTML entities
-      function decodeHtmlEntities(text) {
-        // First pass - use browser's built-in decoder
-        const textArea = document.createElement('textarea');
-        textArea.innerHTML = text;
-        let result = textArea.value;
+      // Function to remove HTML tags but preserve line breaks and standalone < and > characters
+      function stripHtmlTags(text) {
+        // First replace <br>, <br/>, and <br /> with newlines
+        let processed = text.replace(/<br\s*\/?>/gi, "\n");
         
-        // Second pass - manually replace any remaining entities
-        // This handles cases where entities might be double-encoded
-        result = result.replace(/&lt;/g, '<')
-                       .replace(/&gt;/g, '>')
-                       .replace(/&amp;/g, '&')
-                       .replace(/&quot;/g, '"')
-                       .replace(/&#39;/g, "'");
+        // Also preserve paragraph breaks by replacing </p> tags with newlines
+        processed = processed.replace(/<\/p>\s*<p/gi, "</p>\n<p");
         
-        return result;
+        // Replace block-level element endings with newlines
+        processed = processed.replace(/<\/(div|p|h[1-6]|ul|ol|li|blockquote|pre|tr)>/gi, "</$1>\n");
+        
+        // Then remove all HTML tags
+        processed = processed.replace(/<\/?(?:html|head|body|div|p|span|a|img|table|tr|td|th|ul|ol|li|h[1-6]|strong|em|b|i|u|s|blockquote|pre|code|hr|br|input|button|form|script|style|link|meta|title)[^>]*>/gi, '');
+        
+        // Normalize newlines (no more than two consecutive)
+        processed = processed.replace(/\n{3,}/g, "\n\n");
+        
+        return processed;
       }
       
       // Function to make elements resizable
@@ -204,75 +337,161 @@
         });
       }
       
-      // Function to remove HTML tags but preserve line breaks and standalone < and > characters
-      function stripHtmlTags(text) {
-        // First replace <br>, <br/>, and <br /> with newlines
-        let processed = text.replace(/<br\s*\/?>/gi, "\n");
+      // Function to decode HTML entities
+      function decodeHtmlEntities(text) {
+        // First pass - use browser's built-in decoder
+        const textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        let result = textArea.value;
         
-        // Use a more precise regex to target only valid HTML tags
-        // This regex matches standard HTML tags like <p>, <div>, <span>, etc.
-        return processed.replace(/<\/?(?:html|head|body|div|p|span|a|img|table|tr|td|th|ul|ol|li|h[1-6]|strong|em|b|i|u|s|blockquote|pre|code|hr|br|input|button|form|script|style|link|meta|title)[^>]*>/gi, '');
+        // Second pass - manually replace any remaining entities
+        // This handles cases where entities might be double-encoded
+        result = result.replace(/&lt;/g, '<')
+                       .replace(/&gt;/g, '>')
+                       .replace(/&amp;/g, '&')
+                       .replace(/&quot;/g, '"')
+                       .replace(/&#39;/g, "'");
+        
+        return result;
       }
       
-      // Decode button click handler
-      decodeBtn.addEventListener('click', function() {
-        const input = inputEl.value;
+      // Function to sanitize HTML for safe rendering
+      function sanitizeHtml(html) {
+        // Create a new div element
+        const tempDiv = document.createElement('div');
+        // Set the HTML content
+        tempDiv.innerHTML = html;
+        
+        // Remove potentially dangerous elements and attributes
+        const scripts = tempDiv.querySelectorAll('script');
+        scripts.forEach(script => script.remove());
+        
+        const elements = tempDiv.querySelectorAll('*');
+        elements.forEach(el => {
+          // Remove on* attributes (onclick, onload, etc.)
+          for (const attr of el.attributes) {
+            if (attr.name.startsWith('on')) {
+              el.removeAttribute(attr.name);
+            }
+            // Remove javascript: URLs
+            if ((attr.name === 'href' || attr.name === 'src') && attr.value.toLowerCase().startsWith('javascript:')) {
+              el.removeAttribute(attr.name);
+            }
+          }
+        });
+        
+        // Find excessively spaced elements and add a class to control their margins
+        const blockElements = tempDiv.querySelectorAll('div, p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre');
+        blockElements.forEach(el => {
+          el.classList.add('compact-spacing');
+        });
+        
+        return tempDiv.innerHTML;
+      }
+      
+      // Update output display based on user preferences
+      function updateOutput(input) {
         const decoded = decodeHtmlEntities(input);
         outputEl.textContent = decoded;
         
-        // Update the stripped output
-        const strippedOutput = stripHtmlTags(decoded);
-        document.getElementById('output-stripped').textContent = strippedOutput;
+        // Update the second section based on which toggle is active
+        if (htmlToggle.classList.contains('active')) {
+          // Render as HTML
+          const sanitized = sanitizeHtml(decoded);
+          // Normalize whitespace by ensuring no more than two consecutive newlines
+          let normalizedHtml = sanitized.replace(/(\r\n|\n|\r){3,}/g, '\n\n');
+          outputStrippedEl.innerHTML = normalizedHtml;
+          outputStrippedEl.classList.remove('plain-text');
+        } else {
+          // Show as plain text with HTML tags removed
+          const plainText = stripHtmlTags(decoded);
+          outputStrippedEl.textContent = plainText;
+          outputStrippedEl.classList.add('plain-text');
+        }
+      }
+      
+      // Line height adjustment
+      lineHeightSlider.addEventListener('input', function() {
+        const value = this.value;
+        lineHeightValue.textContent = value;
+        
+        // Update line height for both output areas
+        outputEl.style.lineHeight = value;
+        outputStrippedEl.style.lineHeight = value;
+      });
+      
+      // Toggle between HTML and plain text
+      htmlToggle.addEventListener('click', function() {
+        htmlToggle.classList.add('active');
+        textToggle.classList.remove('active');
+        
+        if (inputEl.value) {
+          const decoded = decodeHtmlEntities(inputEl.value);
+          const sanitized = sanitizeHtml(decoded);
+          // Normalize whitespace by ensuring no more than two consecutive newlines
+          let normalizedHtml = sanitized.replace(/(\r\n|\n|\r){3,}/g, '\n\n');
+          outputStrippedEl.innerHTML = normalizedHtml;
+          outputStrippedEl.classList.remove('plain-text');
+        }
+      });
+      
+      textToggle.addEventListener('click', function() {
+        textToggle.classList.add('active');
+        htmlToggle.classList.remove('active');
+        
+        if (inputEl.value) {
+          const decoded = decodeHtmlEntities(inputEl.value);
+          const plainText = stripHtmlTags(decoded);
+          outputStrippedEl.textContent = plainText;
+          outputStrippedEl.classList.add('plain-text');
+        }
+      });
+      
+      // Decode button click handler
+      decodeBtn.addEventListener('click', function() {
+        updateOutput(inputEl.value);
       });
       
       // Clear button click handler
       clearBtn.addEventListener('click', function() {
         inputEl.value = '';
         outputEl.textContent = '';
-        document.getElementById('output-stripped').textContent = '';
+        document.getElementById('output-stripped').innerHTML = '';
       });
+      
+      // Helper function to update examples
+      function handleExampleClick(exampleEl) {
+        inputEl.value = exampleEl.textContent;
+        updateOutput(exampleEl.textContent);
+      }
       
       // Example click handlers
       example1.addEventListener('click', function() {
-        inputEl.value = example1.textContent;
-        const decoded = decodeHtmlEntities(example1.textContent);
-        outputEl.textContent = decoded;
-        document.getElementById('output-stripped').textContent = stripHtmlTags(decoded);
+        handleExampleClick(example1);
       });
       
       example2.addEventListener('click', function() {
-        inputEl.value = example2.textContent;
-        const decoded = decodeHtmlEntities(example2.textContent);
-        outputEl.textContent = decoded;
-        document.getElementById('output-stripped').textContent = stripHtmlTags(decoded);
+        handleExampleClick(example2);
       });
       
       example3.addEventListener('click', function() {
-        inputEl.value = example3.textContent;
-        const decoded = decodeHtmlEntities(example3.textContent);
-        outputEl.textContent = decoded;
-        document.getElementById('output-stripped').textContent = stripHtmlTags(decoded);
+        handleExampleClick(example3);
       });
       
       example4.addEventListener('click', function() {
-        inputEl.value = example4.textContent;
-        const decoded = decodeHtmlEntities(example4.textContent);
-        outputEl.textContent = decoded;
-        document.getElementById('output-stripped').textContent = stripHtmlTags(decoded);
+        handleExampleClick(example4);
       });
       
       example5.addEventListener('click', function() {
-        inputEl.value = example5.textContent;
-        const decoded = decodeHtmlEntities(example5.textContent);
-        outputEl.textContent = decoded;
-        document.getElementById('output-stripped').textContent = stripHtmlTags(decoded);
+        handleExampleClick(example5);
       });
       
       example6.addEventListener('click', function() {
-        inputEl.value = example6.textContent;
-        const decoded = decodeHtmlEntities(example6.textContent);
-        outputEl.textContent = decoded;
-        document.getElementById('output-stripped').textContent = stripHtmlTags(decoded);
+        handleExampleClick(example6);
+      });
+      
+      example7.addEventListener('click', function() {
+        handleExampleClick(example7);
       });
     });
   </script>
