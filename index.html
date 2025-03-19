@@ -89,11 +89,16 @@
       color: white;
     }
     
-    /* Move toggle to section heading */
+    /* Move toggle next to section heading */
     .section-heading {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .section-heading h3 {
+      margin: 0;
+      margin-right: 10px;
     }
     
     .output {
@@ -102,7 +107,7 @@
       border-radius: 4px;
       padding: 15px;
       height: 200px;
-      max-height: 1200px;
+      max-height: 200px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
@@ -227,13 +232,13 @@
       </div>
       
       <div class="output-container">
-        <h3 class="section-heading">
-          Sanitized Output:
+        <div class="section-heading">
+          <h3>Decoded Output (HTML Tags with Rendering Toggle):</h3>
           <div class="toggle-container">
             <button id="html-toggle" class="toggle-option active">Render HTML</button>
             <button id="text-toggle" class="toggle-option">Plain Text</button>
           </div>
-        </h3>
+        </div>
         <div id="output-stripped" class="output"></div>
       </div>
     </div>
